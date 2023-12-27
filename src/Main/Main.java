@@ -17,22 +17,24 @@ import MyGradient.MyGradComponent;
 
 public class Main extends JFrame
 {
-    int sizeX = 515; // Image size
+    // Rend image size X x Y
+    int sizeX = 515;
     int sizeY = 515;
-    final double MoveStep = 1;
-    final double ZoomStep = 0.005;
-    int xUiStart = 540;
-    final int UiWidth = 180;
+
+    final double moveStep = 1;
+    final double zoomStep = 0.005;
+    int xGuiPanelStart = 540;
+    final int guiPanelWidth = 180;
     boolean isSceneDrawing;
 
-    double startFYArr[]; // Start double Y for every part of image
-    int yStart[]; // 4 int
-    int yEnd[]; // 4 int
+    double startFYArr[]; // size of arr - coreNum, Start double Y for every part of image
+    int yStart[]; // size of arr - coreNum
+    int yEnd[]; // size of arr - coreNum
 
 
-    int PicNumber = 0;
-    int PaletteMode = 0;
-    int GradNum = 0;
+    int pictNumber = 0;
+    int paletteMode = 0;
+    int gradNumber = 0;
 
     double step = 0.03;
     double startX = 0;
@@ -43,18 +45,14 @@ public class Main extends JFrame
     JLabel imgLabel;
     final byte coreNum = 8; // Threads and image parts number
 
-    // Компонент для рисования текущего градиента
-    MyGradComponent grad = new MyGradComponent();
+    // My gradient GUI component
+    MyGradComponent grad;
     JLabel statusBar;
-    JComboBox firstComboBox;
-    JComboBox gradTypeComboBox;
-    JCheckBox animCheckBox;
-    JCheckBox paletteInverCheckbox; // Palette inversion
+    JComboBox firstComboBox, gradientComboBox, gradTypeComboBox;
+    JCheckBox animCheckBox, paletteInversionCheckbox;
 
-    JButton randomGradButton;
-    JButton ZoomInButton, ZoomOutButton;
+    JButton randomGradButton, ZoomInButton, ZoomOutButton;
     JButton UpButton, DownButton, LeftButton, RightButton;
-    JComboBox gradientComboBox;
     DefaultComboBoxModel cbPrepGradModel;
     Timer animTimer;
 
@@ -90,11 +88,12 @@ public class Main extends JFrame
         AddPaletteModeComboBox(contents);
         AddGradientComboBox(contents);
 
-        grad.setBounds(xUiStart, 350, UiWidth, 25);
+        grad = new MyGradComponent();
+        grad.setBounds(xGuiPanelStart, 350, guiPanelWidth, 25);
         contents.add(grad);
 
         randomGradButton = new JButton("Random gradient");
-        randomGradButton.setBounds(xUiStart, 385, UiWidth, 25);
+        randomGradButton.setBounds(xGuiPanelStart, 385, guiPanelWidth, 25);
         randomGradButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -109,20 +108,20 @@ public class Main extends JFrame
         randomGradButton.setEnabled(false);
         gradientComboBox.setEnabled(false);
 
-        paletteInverCheckbox = new JCheckBox("Palette inversion");
-        paletteInverCheckbox.addActionListener(new ActionListener() {
+        paletteInversionCheckbox = new JCheckBox("Palette inversion");
+        paletteInversionCheckbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 if (actionEvent.getActionCommand().toString().equals("Palette inversion")) {
 
-                    grad.setPaletteInversion(paletteInverCheckbox.isSelected());
+                    grad.setPaletteInversion(paletteInversionCheckbox.isSelected());
                     DrawScene();
                     frame.repaint();
                 }
             }
         });
-        paletteInverCheckbox.setBounds(xUiStart, 420, UiWidth, 25);
-        contents.add(paletteInverCheckbox);
+        paletteInversionCheckbox.setBounds(xGuiPanelStart, 420, guiPanelWidth, 25);
+        contents.add(paletteInversionCheckbox);
 
         animCheckBox = new JCheckBox("Animation");
         animCheckBox.addActionListener(new ActionListener() {
@@ -140,7 +139,7 @@ public class Main extends JFrame
                 }
             }
         });
-        animCheckBox.setBounds(xUiStart, 455, UiWidth, 25);
+        animCheckBox.setBounds(xGuiPanelStart, 455, guiPanelWidth, 25);
         contents.add(animCheckBox);
 
         statusBar = new JLabel(" The image is calculated in 4 threads | Rendering took a while (ms): 0");
@@ -171,24 +170,24 @@ public class Main extends JFrame
         Dimension winSize;
         winSize = getSize();
 
-        xUiStart = winSize.width - UiWidth - 30;
+        xGuiPanelStart = winSize.width - guiPanelWidth - 30;
 
-        grad.setBounds(xUiStart, 350, UiWidth, 25);
+        grad.setBounds(xGuiPanelStart, 350, guiPanelWidth, 25);
 
-        firstComboBox.setBounds(xUiStart, 10, UiWidth, 25);
-        gradTypeComboBox.setBounds(xUiStart, 280, UiWidth, 25);
-        gradientComboBox.setBounds(xUiStart, 315, UiWidth, 25);
+        firstComboBox.setBounds(xGuiPanelStart, 10, guiPanelWidth, 25);
+        gradTypeComboBox.setBounds(xGuiPanelStart, 280, guiPanelWidth, 25);
+        gradientComboBox.setBounds(xGuiPanelStart, 315, guiPanelWidth, 25);
 
-        animCheckBox.setBounds(xUiStart, 455, UiWidth, 25);
-        paletteInverCheckbox.setBounds(xUiStart, 420, UiWidth, 25);
+        animCheckBox.setBounds(xGuiPanelStart, 455, guiPanelWidth, 25);
+        paletteInversionCheckbox.setBounds(xGuiPanelStart, 420, guiPanelWidth, 25);
 
-        randomGradButton.setBounds(xUiStart, 385, UiWidth, 25);
-        ZoomInButton.setBounds(xUiStart, 55, UiWidth, 25);
-        ZoomOutButton.setBounds(xUiStart, 90, UiWidth, 25);
-        UpButton.setBounds(xUiStart, 135, UiWidth, 25);
-        DownButton.setBounds(xUiStart, 170, UiWidth, 25);
-        LeftButton.setBounds(xUiStart, 205, UiWidth, 25);
-        RightButton.setBounds(xUiStart, 240, UiWidth, 25);
+        randomGradButton.setBounds(xGuiPanelStart, 385, guiPanelWidth, 25);
+        ZoomInButton.setBounds(xGuiPanelStart, 55, guiPanelWidth, 25);
+        ZoomOutButton.setBounds(xGuiPanelStart, 90, guiPanelWidth, 25);
+        UpButton.setBounds(xGuiPanelStart, 135, guiPanelWidth, 25);
+        DownButton.setBounds(xGuiPanelStart, 170, guiPanelWidth, 25);
+        LeftButton.setBounds(xGuiPanelStart, 205, guiPanelWidth, 25);
+        RightButton.setBounds(xGuiPanelStart, 240, guiPanelWidth, 25);
 
         statusBar.setBounds(1,winSize.height - 65,winSize.width - 18, 25);
     }
@@ -212,7 +211,7 @@ public class Main extends JFrame
         Dimension newWinSize;
         newWinSize = getSize();
 
-        sizeX = newWinSize.width - 50 - UiWidth;
+        sizeX = newWinSize.width - 50 - guiPanelWidth;
         sizeY = newWinSize.height - 85;
 
         imgBuffer = new BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_RGB);
@@ -231,7 +230,7 @@ public class Main extends JFrame
         isSceneDrawing = true;
 
         // Для все объектов
-        MyCalc.setStaticVar(grad, sizeX, PicNumber, step, startX);
+        MyCalc.setStaticVar(grad, sizeX, pictNumber, step, startX);
 
         Thread threads[] = new Thread[coreNum];
         MyCalc mc[] = new MyCalc[coreNum];
@@ -345,11 +344,11 @@ public class Main extends JFrame
         }
         firstComboBox = new JComboBox<String>(cbModel);
         cbModel.setSelectedItem("Picture 1");
-        firstComboBox.setBounds(xUiStart, 10, UiWidth, 25);
+        firstComboBox.setBounds(xGuiPanelStart, 10, guiPanelWidth, 25);
         firstComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                PicNumber = cbModel.getIndexOf(cbModel.getSelectedItem());
+                pictNumber = cbModel.getIndexOf(cbModel.getSelectedItem());
                 DrawScene();
                 frame.repaint();
             }
@@ -367,12 +366,12 @@ public class Main extends JFrame
         cbModel.addElement("Random gradient");
         gradTypeComboBox = new JComboBox<String>(cbModel);
         cbModel.setSelectedItem("Black-white gradient");
-        gradTypeComboBox.setBounds(xUiStart, 280, UiWidth, 25);
+        gradTypeComboBox.setBounds(xGuiPanelStart, 280, guiPanelWidth, 25);
         gradTypeComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 if (cbModel.getSelectedItem().toString().equals("Black-white gradient")) {
-                    PaletteMode = 0;
+                    paletteMode = 0;
                     randomGradButton.setEnabled(false);
                     gradientComboBox.setEnabled(false);
                     grad.setPoints(new Color(0,0,0),
@@ -383,14 +382,14 @@ public class Main extends JFrame
                     grad.calcPalette();
                 }
                 else if (cbModel.getSelectedItem().toString().equals("Prepared gradient")) {
-                    PaletteMode = 1;
+                    paletteMode = 1;
                     randomGradButton.setEnabled(false);
                     gradientComboBox.setEnabled(true);
-                    GradNum = cbPrepGradModel.getIndexOf(cbPrepGradModel.getSelectedItem());
-                    grad.setPresetPalette(GradNum);
+                    gradNumber = cbPrepGradModel.getIndexOf(cbPrepGradModel.getSelectedItem());
+                    grad.setPresetPalette(gradNumber);
                 }
                 else if (cbModel.getSelectedItem().toString().equals("Random gradient")) {
-                    PaletteMode = 2;
+                    paletteMode = 2;
                     randomGradButton.setEnabled(true);
                     gradientComboBox.setEnabled(false);
                     grad.createRandomPalette();
@@ -412,12 +411,12 @@ public class Main extends JFrame
         }
         gradientComboBox = new JComboBox<String>(cbPrepGradModel);
         cbPrepGradModel.setSelectedItem("Gradient 1");
-        gradientComboBox.setBounds(xUiStart, 315, UiWidth, 25);
+        gradientComboBox.setBounds(xGuiPanelStart, 315, guiPanelWidth, 25);
         gradientComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                GradNum = cbPrepGradModel.getIndexOf(cbPrepGradModel.getSelectedItem());
-                grad.setPresetPalette(GradNum);
+                gradNumber = cbPrepGradModel.getIndexOf(cbPrepGradModel.getSelectedItem());
+                grad.setPresetPalette(gradNumber);
                 DrawScene();
                 frame.repaint();
             }
@@ -430,14 +429,14 @@ public class Main extends JFrame
     private void AddMoveAndZoomButtons(JPanel contents) {
 
         ZoomInButton = new JButton("Zoom In");
-        ZoomInButton.setBounds(xUiStart, 55, UiWidth, 25);
+        ZoomInButton.setBounds(xGuiPanelStart, 55, guiPanelWidth, 25);
         ZoomInButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Zoom In")) {
                     double centerX = startX + (sizeX / 2.0) * step;
                     double centerY = startY + (sizeY / 2.0) * step;
-                    step = step - ZoomStep;
+                    step = step - zoomStep;
                     startX = centerX - (sizeX / 2.0) * step;
                     startY = centerY - (sizeY / 2.0) * step;
                     UpdateFYArray();
@@ -448,14 +447,14 @@ public class Main extends JFrame
         contents.add(ZoomInButton);
 
         ZoomOutButton = new JButton("Zoom Out");
-        ZoomOutButton.setBounds(xUiStart, 90, UiWidth, 25);
+        ZoomOutButton.setBounds(xGuiPanelStart, 90, guiPanelWidth, 25);
         ZoomOutButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Zoom Out")) {
                     double centerX = startX + (sizeX / 2.0) * step;
                     double centerY = startY + (sizeY / 2.0) * step;
-                    step = step + ZoomStep;
+                    step = step + zoomStep;
                     startX = centerX - (sizeX / 2.0) * step;
                     startY = centerY - (sizeY / 2.0) * step;
                     UpdateFYArray();
@@ -466,12 +465,12 @@ public class Main extends JFrame
         contents.add(ZoomOutButton);
 
         UpButton = new JButton("Up");
-        UpButton.setBounds(xUiStart, 135, UiWidth, 25);
+        UpButton.setBounds(xGuiPanelStart, 135, guiPanelWidth, 25);
         UpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Up")) {
-                    startY += MoveStep;
+                    startY += moveStep;
                     UpdateFYArray();
                     DrawScene();
                     frame.repaint();
@@ -480,12 +479,12 @@ public class Main extends JFrame
         contents.add(UpButton);
 
         DownButton = new JButton("Down");
-        DownButton.setBounds(xUiStart, 170, UiWidth, 25);
+        DownButton.setBounds(xGuiPanelStart, 170, guiPanelWidth, 25);
         DownButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Down")) {
-                    startY -= MoveStep;
+                    startY -= moveStep;
                     UpdateFYArray();
                     DrawScene();
                     frame.repaint();
@@ -494,12 +493,12 @@ public class Main extends JFrame
         contents.add(DownButton);
 
         LeftButton = new JButton("Left");
-        LeftButton.setBounds(xUiStart, 205, UiWidth, 25);
+        LeftButton.setBounds(xGuiPanelStart, 205, guiPanelWidth, 25);
         LeftButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Left")) {
-                    startX += MoveStep;
+                    startX += moveStep;
                     DrawScene();
                     frame.repaint();
                 }
@@ -507,12 +506,12 @@ public class Main extends JFrame
         contents.add(LeftButton);
 
         RightButton = new JButton("Right");
-        RightButton.setBounds(xUiStart, 240, UiWidth, 25);
+        RightButton.setBounds(xGuiPanelStart, 240, guiPanelWidth, 25);
         RightButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Right")) {
-                    startX -= MoveStep;
+                    startX -= moveStep;
                     DrawScene();
                     frame.repaint();
                 }
