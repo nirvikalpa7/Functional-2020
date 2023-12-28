@@ -54,6 +54,9 @@ public class Main extends JFrame
     DefaultComboBoxModel cbPrepGradModel;
     Timer animTimer;
 
+    Thread threads[];
+    MyCalc threadTasks[];
+
     static Main frame;
 
     //==================================================================================================================
@@ -164,9 +167,6 @@ public class Main extends JFrame
         int y = (int) ((dimension.getHeight() - winSizeY) / 2);
         setLocation(x, y);
 
-        UpdateRendImageArrays();
-        DrawScene();
-
         setVisible(true);
     }
 
@@ -227,21 +227,13 @@ public class Main extends JFrame
         long startTime = System.nanoTime();
         isSceneDrawing = true;
 
-        // Для все объектов
-        MyCalc.setStaticVar(grad, sizeX, drawFunNumber, step, startX);
-
-        Thread threads[] = new Thread[coreNum];
-        MyCalc mc[] = new MyCalc[coreNum];
-
-        for (byte i = 0; i < coreNum; i++) {
-            mc[i] = new MyCalc();
-            mc[i].setVar(yStart[i], yEnd[i], startFYArr[i]);
-            threads[i] = new Thread(mc[i], "Thread " + (i+1));
+        for (int i = 0; i < coreNum; i++) {
+            threads[i] = new Thread(threadTasks[i], "Thread " + (i+1));
             threads[i].start();
         }
 
         try {
-            for (byte i = 0; i < coreNum; i++) {
+            for (int i = 0; i < coreNum; i++) {
                 threads[i].join();
             }
         }
@@ -250,11 +242,11 @@ public class Main extends JFrame
         }
 
         boolean theLastCycle = false;
-        for (byte i = 0; i < coreNum; i++) {
+        for (int i = 0; i < coreNum; i++) {
             if (i == coreNum - 1) {
                 theLastCycle = true;
             }
-            CopyPartOfFrameToImg(yStart[i], yEnd[i], mc[i], theLastCycle);
+            CopyPartOfFrameToImg(yStart[i], yEnd[i], threadTasks[i], theLastCycle);
         }
 
         DrawImageBorder();
@@ -309,9 +301,14 @@ public class Main extends JFrame
     }
 
     //==================================================================================================================
-    private void UpdateFYArray() {
+    private void UpdateRenderTasks() {
         for (int k = 0; k < coreNum; k++) {
             startFYArr[k] = startY + step * yStart[k]; // 0, 101, 201, 301, if dy = 100
+        }
+
+        MyCalc.setStaticVar(grad, sizeX, drawFunNumber, step, startX);
+        for (int i = 0; i < coreNum; i++) {
+            threadTasks[i].setVar(yStart[i], yEnd[i], startFYArr[i]);
         }
     }
 
@@ -335,8 +332,14 @@ public class Main extends JFrame
         }
         yEnd[coreNum - 1] = sizeY; // the last Y border
 
+        threads = new Thread[coreNum];
+        threadTasks = new MyCalc[coreNum];
+        for (int i = 0; i < coreNum; i++) {
+            threadTasks[i] = new MyCalc();
+        }
+
         startFYArr = new double[coreNum];
-        UpdateFYArray();
+        UpdateRenderTasks();
     }
 
     //==================================================================================================================
@@ -398,6 +401,7 @@ public class Main extends JFrame
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 drawFunNumber = cbModel.getIndexOf(cbModel.getSelectedItem());
+                UpdateRenderTasks();
                 DrawScene();
                 frame.repaint();
             }
@@ -485,7 +489,7 @@ public class Main extends JFrame
                     step = step - zoomStep;
                     startX = centerX - (sizeX / 2.0) * step;
                     startY = centerY - (sizeY / 2.0) * step;
-                    UpdateFYArray();
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
@@ -502,7 +506,7 @@ public class Main extends JFrame
                     step = step + zoomStep;
                     startX = centerX - (sizeX / 2.0) * step;
                     startY = centerY - (sizeY / 2.0) * step;
-                    UpdateFYArray();
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
@@ -515,7 +519,7 @@ public class Main extends JFrame
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Up")) {
                     startY += moveStep;
-                    UpdateFYArray();
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
@@ -528,7 +532,7 @@ public class Main extends JFrame
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Down")) {
                     startY -= moveStep;
-                    UpdateFYArray();
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
@@ -541,6 +545,7 @@ public class Main extends JFrame
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Left")) {
                     startX += moveStep;
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
@@ -553,6 +558,7 @@ public class Main extends JFrame
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().toString().equals("Right")) {
                     startX -= moveStep;
+                    UpdateRenderTasks();
                     DrawScene();
                     frame.repaint();
                 }
