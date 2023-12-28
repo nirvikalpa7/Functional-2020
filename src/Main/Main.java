@@ -4,9 +4,14 @@ import java.awt.*;
 import java.awt.image.*;
 import java.awt.event.*;
 
+import javax.imageio.ImageIO;
+
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -49,7 +54,7 @@ public class Main extends JFrame
     JLabel statusBar;
     JComboBox firstComboBox, gradientComboBox, gradTypeComboBox, coreNumComboBox;
     JCheckBox animCheckBox, paletteInversionCheckbox, threadImgBorder;
-    JButton randomGradButton, zoomInButton, zoomOutButton;
+    JButton randomGradButton, zoomInButton, zoomOutButton, saveImgButton;
     JButton upButton, downButton, leftButton, rightButton;
     DefaultComboBoxModel cbPrepGradModel;
     Timer animTimer;
@@ -86,6 +91,7 @@ public class Main extends JFrame
 
         AddPicComboBox(contents);
         AddMoveAndZoomButtons(contents);
+        AddSaveImageButton(contents);
         AddPaletteModeComboBox(contents);
         AddGradientComboBox(contents);
         AddCoreNumComboBox(contents);
@@ -196,6 +202,7 @@ public class Main extends JFrame
         downButton.setBounds(xGuiPanelStart, 170, guiPanelWidth, 25);
         leftButton.setBounds(xGuiPanelStart, 205, guiPanelWidth, 25);
         rightButton.setBounds(xGuiPanelStart, 240, guiPanelWidth, 25);
+        saveImgButton.setBounds(xGuiPanelStart, 555, guiPanelWidth, 25);
 
         statusBar.setBounds(1,winSize.height - 65,winSize.width - 18, 25);
     }
@@ -355,6 +362,39 @@ public class Main extends JFrame
                 break; // Don't worry about it
             }
         }
+    }
+
+    //==================================================================================================================
+
+    private void AddSaveImageButton(JPanel contents) {
+        saveImgButton = new JButton("Save image");
+        saveImgButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getActionCommand().toString().equals("Save image")) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Specify a PNG file to save");
+                    fileChooser.setAcceptAllFileFilterUsed(false);
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG images", "png");
+                    fileChooser.addChoosableFileFilter(filter);
+                    final int userSelection = fileChooser.showSaveDialog(frame);
+                    if (userSelection == JFileChooser.APPROVE_OPTION) {
+                        File fileToSave = fileChooser.getSelectedFile();
+                        String fn = fileToSave.toString();
+                        if (!fn.toUpperCase().endsWith(".PNG")) {
+                            fn += ".png";
+                            fileToSave = new File(fn);
+                        }
+                        try {
+                            ImageIO.write(imgBuffer, "png", fileToSave);
+                        } catch (IOException exc) {
+
+                        }
+                    }
+                }
+            }
+        });
+        contents.add(saveImgButton);
     }
 
     //==================================================================================================================
