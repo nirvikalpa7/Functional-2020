@@ -149,7 +149,7 @@ public class Main extends JFrame
         });
         contents.add(threadImgBorder);
 
-        statusBar = new JLabel(" The image (500 x 500) is calculated in 8 threads | Rendering took a while: 0 ms");
+        statusBar = new JLabel(" The image (500 x 500) is calculated in 8 threads. Rendering took a while: 0 ms");
         statusBar.setBorder(new BevelBorder(BevelBorder.LOWERED));
         contents.add(statusBar);
 
@@ -224,7 +224,7 @@ public class Main extends JFrame
 
     public void DrawScene() {
 
-        long startTime = System.currentTimeMillis();
+        long startTime = System.nanoTime();
         isSceneDrawing = true;
 
         // Для все объектов
@@ -260,10 +260,10 @@ public class Main extends JFrame
         DrawImageBorder();
 
         isSceneDrawing = false;
-        long stopTime = System.currentTimeMillis();
-        long elapsedTime = stopTime - startTime;
+        long stopTime = System.nanoTime();
+        long elapsedTime = Math.round((stopTime - startTime) / 1000000.0);
 
-        statusBar.setText(" The image (" + sizeX + " x " + sizeY + ") is calculated in " + coreNum + " threads | Rendering took a while: " + elapsedTime + " ms");
+        statusBar.setText(" The image (" + sizeX + " x " + sizeY + ") is calculated in " + coreNum + " threads. Rendering took a while: " + elapsedTime + " ms");
     }
 
     //==================================================================================================================
