@@ -43,11 +43,11 @@ public class Main extends JFrame
     BufferedImage imgBuffer;
     ImageIcon imgIcon;
     JLabel imgLabel;
-    final byte coreNum = 8; // Threads and image parts number
+    int coreNum = 8; // Threads and image parts number
 
     MyGradComponent grad; // My gradient GUI component
     JLabel statusBar;
-    JComboBox firstComboBox, gradientComboBox, gradTypeComboBox;
+    JComboBox firstComboBox, gradientComboBox, gradTypeComboBox, coreNumComboBox;
     JCheckBox animCheckBox, paletteInversionCheckbox, threadImgBorder;
     JButton randomGradButton, zoomInButton, zoomOutButton;
     JButton upButton, downButton, leftButton, rightButton;
@@ -85,6 +85,7 @@ public class Main extends JFrame
         AddMoveAndZoomButtons(contents);
         AddPaletteModeComboBox(contents);
         AddGradientComboBox(contents);
+        AddCoreNumComboBox(contents);
 
         grad = new MyGradComponent();
         contents.add(grad);
@@ -163,7 +164,7 @@ public class Main extends JFrame
         int y = (int) ((dimension.getHeight() - winSizeY) / 2);
         setLocation(x, y);
 
-        UpdateImageBounds();
+        UpdateRendImageArrays();
         DrawScene();
 
         setVisible(true);
@@ -171,7 +172,7 @@ public class Main extends JFrame
 
     //==================================================================================================================
 
-    public void resizeGui() {
+    private void resizeGui() {
         Dimension winSize;
         winSize = getSize();
 
@@ -182,6 +183,7 @@ public class Main extends JFrame
         firstComboBox.setBounds(xGuiPanelStart, 10, guiPanelWidth, 25);
         gradTypeComboBox.setBounds(xGuiPanelStart, 280, guiPanelWidth, 25);
         gradientComboBox.setBounds(xGuiPanelStart, 315, guiPanelWidth, 25);
+        coreNumComboBox.setBounds(xGuiPanelStart, 515, guiPanelWidth, 25);
 
         paletteInversionCheckbox.setBounds(xGuiPanelStart, 420, guiPanelWidth, 25);
         animCheckBox.setBounds(xGuiPanelStart, 450, guiPanelWidth, 25);
@@ -200,19 +202,9 @@ public class Main extends JFrame
 
     //==================================================================================================================
 
-    public void resizeImage() {
+    private void resizeImage() {
 
-        if (animCheckBox.isSelected())
-            animCheckBox.setSelected(false);
-
-        while(isSceneDrawing)
-        {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ie) {
-                break; // Don't worry about it
-            }
-        }
+        waitDrawSceneFinish();
 
         Dimension newWinSize;
         newWinSize = getSize();
@@ -225,7 +217,7 @@ public class Main extends JFrame
         imgLabel.setIcon(imgIcon);
         imgLabel.setBounds(10,10, sizeX, sizeY);
 
-        UpdateImageBounds();
+        UpdateRendImageArrays();
     }
 
     //==================================================================================================================
@@ -317,7 +309,7 @@ public class Main extends JFrame
     }
 
     //==================================================================================================================
-    public void UpdateFYArray() {
+    private void UpdateFYArray() {
         for (int k = 0; k < coreNum; k++) {
             startFYArr[k] = startY + step * yStart[k]; // 0, 101, 201, 301, if dy = 100
         }
@@ -325,27 +317,72 @@ public class Main extends JFrame
 
     //==================================================================================================================
 
-        public void UpdateImageBounds() {
-            startX = -sizeX / 2 * step;
-            startY = -sizeY / 2 * step;
+    private void UpdateRendImageArrays() {
+        startX = -sizeX / 2 * step;
+        startY = -sizeY / 2 * step;
 
-            final int dy = sizeY / coreNum;
+        final int dy = sizeY / coreNum;
 
-            yStart = new int[coreNum];
-            yStart[0] = 0;
-            for (int i = 1; i < coreNum; i++) {
-                yStart[i] = dy * i + 1; // 101, 201, 301... if dx = 100
-            }
-
-            yEnd = new int[coreNum];
-            for (int j = 0; j < coreNum - 1; j++) {
-                yEnd[j] = dy * (j + 1);
-            }
-            yEnd[coreNum - 1] = sizeY; // the last Y border
-
-            startFYArr = new double[coreNum];
-            UpdateFYArray();
+        yStart = new int[coreNum];
+        yStart[0] = 0;
+        for (int i = 1; i < coreNum; i++) {
+            yStart[i] = dy * i + 1; // 101, 201, 301... if dx = 100
         }
+
+        yEnd = new int[coreNum];
+        for (int j = 0; j < coreNum - 1; j++) {
+            yEnd[j] = dy * (j + 1);
+        }
+        yEnd[coreNum - 1] = sizeY; // the last Y border
+
+        startFYArr = new double[coreNum];
+        UpdateFYArray();
+    }
+
+    //==================================================================================================================
+
+    private void waitDrawSceneFinish() {
+        if (animCheckBox.isSelected())
+            animCheckBox.setSelected(false);
+
+        while (isSceneDrawing) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ie) {
+                break; // Don't worry about it
+            }
+        }
+    }
+
+    //==================================================================================================================
+
+    private void AddCoreNumComboBox(JPanel contents) {
+
+        DefaultComboBoxModel coreNumCBModel = new DefaultComboBoxModel<String>();
+        coreNumCBModel.addElement("2 threads");
+        coreNumCBModel.addElement("4 threads");
+        coreNumCBModel.addElement("8 threads");
+        coreNumCBModel.addElement("16 threads");
+
+        coreNumComboBox = new JComboBox<String>(coreNumCBModel);
+        coreNumCBModel.setSelectedItem("8 threads");
+        coreNumComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                waitDrawSceneFinish();
+
+                final int coreNumbers[] = {2, 4, 8, 16};
+                final int coreNumSelectedIndex = coreNumCBModel.getIndexOf(coreNumCBModel.getSelectedItem());
+                coreNum = coreNumbers[coreNumSelectedIndex];
+
+                UpdateRendImageArrays();
+                DrawScene();
+                frame.repaint();
+            }
+        });
+        contents.add(coreNumComboBox);
+    }
 
     //==================================================================================================================
 
